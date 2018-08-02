@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <title>Bingo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="css/main.css">
+  <style>
+    body {
+      background: #e0e0e0;
+      font-family: Helvetica, Arial, "Lucida Grande", sans-serif;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    main,
+    section {
+      width: 100%;
+      margin: auto;
+      padding-top: 10px;
+      background-color: white;
+    }
+
+    table {
+      border: 1px solid darkslategrey;
+      border-radius: 9px;
+      box-shadow: 2px 2px 5px gray;
+      margin: 0 auto;
+      padding: 25px 5px 5px;
+    }
+
+    header h1 {
+      color: #6f6f6f;
+      font-family: Lato, sans-serif;
+      font-size: 40px;
+      font-weight: 400;
+      margin: 20px 0 0;
+      text-align: center;
+      text-shadow: 0 0 0 rgba(0, 0, 0, .4);
+    }
+
+    /* format of the cells on the bingo card (game board) */
+
+    td,
+    th {
+      background-repeat: no - repeat;
+      background-position: center;
+      border: 1px solid black;
+      font-size: 2.0em;
+      height: 50px;
+      text-align: center;
+      width: 50px;
+    }
+
+    th {
+      background-color: paleturquoise;
+    }
+
+    /* free cell */
+
+    .cell22 {
+      background-color: darkslategrey;
+      color: white;
+      font-size: 1.1em;
+    }
+
+    button {
+      background-color: paleturquoise;
+      font-size: 1.2em;
+      height: 1.6em;
+      margin: 8px auto;
+      min-width: 200px;
+    }
+
+    /* caller stuff */
+
+    p,
+    #message {
+      font-family: monospace;
+    }
+
+    p,
+    #past,
+    #called {
+      border: 1px dotted darkslategrey;
+      display: block;
+      margin: 5px auto;
+      width: 400px;
+    }
+
+    #usedlist {
+      word-break: break-all;
+    }
+
+    #called {
+      color: red;
+      font-size: 2em;
+      font-weight: 700;
+    }
+
+    /* overlay and popup messages styling */
+
+    #results {
+      background-color: #f9ecf2;
+      border: 1px solid #660066;
+      border-radius: 5px;
+      box-shadow: 1px 1px 5px black, -1px - 1px 5px white;
+      display: none;
+      font-weight: bold;
+      height: 30%;
+      margin: 0 auto;
+      padding: 20px;
+      position: fixed;
+      top: 50px;
+      width: 50%;
+      z-index: 200;
+    }
+
+    #overlay {
+      background-color: rgba(20, 20, 20, 0.4);
+      display: none;
+      height: 100%;
+      left: 0;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+    }
+
+    nav {
+      margin: 20px auto;
+      width: 450px;
+      text-align: center;
+    }
+
+    nav a {
+      background-color: #a4a4a4;
+      color: #fff;
+      display: inline-block;
+      font-family: Lato, sans-serif;
+      font-size: 15px;
+      padding: 7px;
+      text-decoration: none;
+    }
+
+    nav a.active,
+    nav a:hover {
+      background: #c2c2c2;
+      color: #818181;
+    }
+
+    footer {
+      margin: auto;
+      padding-top: 10px;
+      margin-top: 10px;
+      text-align: center;
+      color: gray;
+      clear: both;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Bingo Game!</h1>
+  </header>
+  <nav>
+    <a href="./finalCasinoCraps.html">Casino Craps</a>
+    <a href="./finalTicTacToe.html">Tic Tac Toe</a>
+    <a class="active" href="">Bingo</a>
+    <a href="./finalConcentrationGame.html">Concentration</a>
+  </nav>
+
+  <!-- create a bingo card -->
+  <button id="reset">
+    Generate New Card
+  </button>
+  <button id="caller">
+    Caller
+  </button>
+
+  <main>
+    <table id="board">
+      <tr>
+        <th>B</th>
+        <th>I</th>
+        <th>N</th>
+        <th>G</th>
+        <th>O</th>
+      </tr>
+    </table>
+  </main>
+
+  <footer>Yena Park @ Sheridan SYST10199 Web Programming</footer>
+
+  <section>
+    <div id="results">
+      <h3 id="winner"></h3>
+      <p>
+        &mdash;click anywhere in the box to dismiss this message&mdash;
+      </p>
+    </div>
+    <div id="overlay"></div>
+  </section>
+
+</body>
+
+<script>
+  var NUM_ROWS = 5;
+  var NUM_COLS = 5;
+  var card;
+  var usedNums = new Array(76);
+  var availNums = [];
+
+  // new variables you need for week 4:
+  var calledNums = [];  // list of numbers that have been called
+  var gameOver = true;  // game over or not
+  var letters = ["B", "I", "N", "G", "O"];  // for displaying called #
+
+  // winning combinations
+  var winSets = [
+    [0, 1, 2, 3, 4],
+    [5, 6, 7, 8, 9],
+    [10, 11, 12, 13, 14],
+    [15, 16, 17, 18, 19],
+    [20, 21, 22, 23, 24],
+    [0, 5, 10, 15, 20],
+    [1, 6, 11, 16, 21],
+    [2, 7, 12, 17, 22],
+    [3, 8, 13, 18, 23],
+    [4, 9, 14, 19, 24],
+    [0, 6, 12, 18, 24],
+    [4, 8, 12, 16, 20],
+    [0, 4, 12, 20, 24]
+  ];
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  // When the user wants to get a new card, just reload
+  // the page
+  function reloadPage() {
+    location.reload();
+  }
+
+  function init() {
+    for (var j = 0; j < 75; j++) {
+      availNums[j] = j + 1;
+    }
+    createBoard();
+    card = document.getElementsByTagName("td");
+
+    populateCard();
+    createCaller();
+    gameOver = false; // game is now in progress
+
+    // register various eelements with event handlers
+    document.getElementById("reset").addEventListener("click",
+      reloadPage);
+    document.getElementById("caller").addEventListener("click", nextNumber);
+    document.getElementById("results").addEventListener("click",
+      function () { // an example of anon function
+        this.style.display = "none";
+      });
+  }
+
+  function findNumberCell() {
+    var letter = document.getElementById("called").innerHTML;
+    var startIndex;
+    if (letter.includes('B')) { //0,5,10,15,20
+      startIndex = 0;
+    } else if (letter.includes('I')) {//1,6,11,16,21
+      startIndex = 1;
+    } else if (letter.includes('N')) {//2,7,12,17,22
+      startIndex = 2;
+    } else if (letter.includes('G')) {//3,8,13,18,23
+      startIndex = 3;
+    } else if (letter.includes('O')) {//4,9,14,19,24
+      startIndex = 4;
+    }
+
+    for (var i = startIndex; i < 25; i = i + 5) {
+      if (letter.split(" ")[1] === card[i].innerHTML) {
+        var event = new Event('click');
+        card[i].dispatchEvent(event);
+      }
+    }
+  }
+
+  // calls the next bingo number
+  function nextNumber() {
+    if (gameOver)
+      return;
+
+    // get a random bingo # from the list of
+    // available numbers
+    var index = Math.floor(Math.random() * availNums.length);
+    var num = availNums[index];
+
+    // show the number that was called
+    document.getElementById("called").innerHTML
+      = letters[Math.floor((num - 1) / 15)] + " " + num;
+    findNumberCell();
+
+    // remove this number from the list of available numbers
+    availNums.splice(index, 1);
+
+    // add this to the list of numbers already called
+    calledNums.push(num);
+
+    // update the list of called numbers on the screen
+    document.getElementById("usedlist").innerHTML
+      = "Numbers called:<br>" + calledNums.valueOf();
+
+    // update the list of available numbers on the screen
+    var str = "";
+    for (i = 0; i < availNums.length; i++) {
+      str += availNums[i] + " ";
+    }
+    document.getElementById("past").innerHTML = str;
+
+    checkBingo();
+  }
+
+  function createBoard() {
+    var board = document.getElementById("board");
+
+    for (row = 0; row < NUM_ROWS; row++) {
+      var tr = document.createElement("tr");
+      for (col = 0; col < NUM_COLS; col++) {
+        var td = document.createElement("td");
+        td.className = "empty";
+
+        // register each cell to invoke clickCell() when clicked
+        // ignore row 2, column 2 (free space)
+        if (row !== 2 || col !== 2) {
+          td.addEventListener("click", clickCell);
+        }
+        tr.appendChild(td);
+      }
+      board.appendChild(tr);
+    }
+  }
+
+  // toggle the cell as marked or unmarked
+  function clickCell() {
+
+    // if the game is in progress
+    if (!gameOver) {
+
+      // if already marked, unmark it
+      if (this.className === "picked") {
+        this.className = "empty";
+        this.style.backgroundImage = "none";
+        this.style.color = "black";
+
+        // if cell is unmarked, mark it
+      } else {
+        this.className = "picked";
+        this.style.backgroundImage = "url(images/daub.png)";
+        this.style.color = "white";
+      }
+    }
+  }
+  function populateCard() {
+
+    for (row = 0; row < NUM_ROWS; row++) {
+      for (col = 0; col < NUM_COLS; col++) {
+        var index = row * 5 + col;
+        var cell = card[index];
+
+        if (index == 12) {
+          cell.innerHTML = "FREE";
+          cell.className = "picked cell22";
+        } else {
+          cell.innerHTML = getNewNumber(col);
+        }
+
+      }
+    }
+  }
+
+  function createCaller() {
+
+    // add the main div container that holds everything else and
+    // add it to the document above the footer
+    var div = document.createElement("div");
+    document.body.insertBefore(div, document.getElementsByTagName("footer")[0]);
+
+    // add the unused number P to the div
+    var elem = document.createElement("p");
+    elem.appendChild(document.createTextNode("Unused Numbers:"));
+    div.appendChild(elem);
+
+    // add the contents of available numbers to the next P
+    elem = document.createElement("p");
+    elem.id = "past";
+    var str = "";
+    for (i = 0; i < availNums.length; i++) {
+      str += availNums[i] + " ";
+    }
+    elem.appendChild(document.createTextNode(str));
+    div.appendChild(elem);
+
+    // add the P for numbers called 
+    elem = document.createElement("p");
+    elem.id = "usedlist";
+    elem.innerHTML = "Numbers called:<br>";
+    div.appendChild(elem);
+
+    // add the element that will display the most recently
+    // called number
+    elem = document.createElement("p");
+    elem.id = "called";
+    elem.appendChild(document.createTextNode(" "));
+    div.append(elem);
+
+    // add the bingo button
+    elem = document.createElement("div");
+
+    // button should invoke checkBingo() when clicked
+    elem.id = "result";
+    elem.appendChild(document.createTextNode("Bingo!"));
+    div.appendChild(elem);
+
+  }
+
+  // check to see if this is a winning, valid bingo combination
+  function checkBingo() {
+    // see if any of the winSets is a valid, winning combination
+    winSets.forEach(checkWinningCombo);
+
+    // if game is over, they won Bingo
+    if (gameOver) {
+      document.getElementById("result").innerHTML =
+        "You Win!";
+    } else { // not a valid bingo, keep playing
+      document.getElementById("result").innerHTML =
+        "Keep playing!";
+      if (availNums.length === 0) {
+        gameOver = true;
+        document.getElementById("result").innerHTML = "Game Over";
+      }
+    }
+  }
+
+  // see if the player has matched a winning combo and that the
+  // combo is valid; also highlights the winning combo if valid
+  function checkWinningCombo(currentElement, currentIndex, entireArray) {
+
+    // start off with 5 matches
+    var numMatches = 5;
+
+    // for each index in the winning combination:
+    for (i = 0; i < currentElement.length; i++) {
+
+      // get the current cell (for readability, you don't
+      // need this extra variable but it makes this code
+      // easier to learn)
+      var thisCell = card[currentElement[i]];
+
+      // if this cell is the free space OR
+      //   if the cell is picked AND it's a number that was called
+      // then it's valid
+      if (thisCell.innerHTML === "FREE" ||
+        thisCell.className === "picked" &&
+        calledNums.indexOf(thisCell.innerHTML)) {
+        // we found one match of the pattern
+        numMatches--;
+      }
+    }
+    // if num matches is 0 when this is done, it means we were
+    // able to match the pattern completely with valid numbers
+    if (numMatches === 0) {
+      // highlight the matched bingo with a different daub
+      for (i = 0; i < currentElement.length; i++) {
+        card[currentElement[i]].style.background = "red";
+      }
+      // winner: game is over
+      gameOver = true;
+    }
+
+  }
+  function getNewNumber(colNum) {
+    var n;
+    do {
+      n = Math.floor(Math.random() * 15 + 1) + colNum * 15;
+    } while (usedNums[n]);
+    usedNums[n] = true;
+    return n;
+  }
+
+</script>
+
+</html>

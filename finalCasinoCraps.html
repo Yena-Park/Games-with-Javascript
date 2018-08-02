@@ -1,0 +1,240 @@
+<html>
+
+<head>
+  <title>Casino Craps</title>
+  <meta charset="UTF-8" />
+  <style>
+    header h1 {
+      color: #6f6f6f;
+      font-family: Lato, sans-serif;
+      font-size: 40px;
+      font-weight: 400;
+      margin: 20px 0 0;
+      text-align: center;
+      text-shadow: 0 0 0 rgba(0, 0, 0, .4);
+    }
+
+    body {
+      background: #e0e0e0;
+      font-family: Helvetica, Arial, "Lucida Grande", sans-serif;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    section {
+      width: 100%;
+      margin: auto;
+      padding-top: 10px;
+      background: white;
+    }
+
+    nav {
+      margin: 20px auto;
+      width: 450px;
+      text-align: center;
+    }
+
+    nav a {
+      background-color: #a4a4a4;
+      color: #fff;
+      display: inline-block;
+      font-family: Lato, sans-serif;
+      font-size: 15px;
+      padding: 7px;
+      text-decoration: none;
+    }
+
+    nav a.active,
+    nav a:hover {
+      background: #c2c2c2;
+      color: #818181;
+    }
+
+    div .box {
+      margin: 10px;
+      display: table-cell;
+      vertical-align: middle;
+      width: 100px;
+      height: 200px;
+      background: #DDD;
+    }
+
+    div #dice1,
+    #dice2 {
+      width: 50px;
+      height: 50px;
+      background: #f57722;
+    }
+
+    .app {
+      align-content: center;
+      margin: auto;
+      width: 50%;ß
+    }
+
+    footer {
+      margin: auto;
+      padding-top: 10px;
+      margin-top: 10px;
+      text-align: center;
+      color: gray;
+      clear: both;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1> Casino Craps </h1>
+  </header>
+  <nav>
+    <a class="active" href="./finalCasinoCraps.html">Casino Craps</a>
+    <a href="./finalTicTacToe.html">Tic Tac Toe</a>
+    <a href="./finalBingo.html">Bingo</a>
+    <a href="./finalConcentrationGame.html">Concentration</a>
+  </nav>
+
+  <section>
+    <div class="app">
+      <div class="box">
+        <div id="dice1"></div>
+        <div id="dice2"></div>
+      </div>
+      <div class="box">
+        <div>You Rolled..</div>
+        <div id="result"></div>
+      </div>
+      <div class="box" id="turn">
+        <h3 id="status">Roll Again</h3>
+        <h4 id="point"></h4>
+      </div>
+      <div class="box" id="status">
+        <input type="button" value="Roll Dice" onclick="play()" />
+        <input type="button" value="Clear Stats" onclick="clearStats()" />
+        <h3>Stats</h3>
+        <div id="win">Wins: 0</div>
+        <div id="lost">Lost: 0</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Yena Park @ Sheridan SYST10199 Web Programming
+  </footer>
+
+  <script>
+    //Craps!
+    /**
+    rules:  to start a round, the shooter makes a “come out” roll'
+    If the come out roll is a 2, 3, or 12, then the round ends, the player crapped out.
+    If the come out roll is a 7 or 11, the user Wins!
+    Any other roll and the user gets a follow up roll
+    The shooter continues to make come out rolls until he rolls 4, 5, 6, 8, 9, or 10.
+    This number becomes the point and in turn the point phase begins.
+  
+    Point – during this phase, if the shooter rolls a point number then it’s a win for the pass line bets.
+    If the shooter rolls a seven, it’s a loss for the pass line bets and the round is over.
+    */
+
+    // enum game status
+    var WON = 0;
+    var LOST = 1;
+    var CONTINUE_ROLLING = 2;
+
+    // properteis
+    var firstTurn = true;
+    var sumOfDice = 0;
+    var pointToWin = 0;
+    var gameStatus = CONTINUE_ROLLING;
+    var winCount = 0;
+    var lostCount = 0;
+
+    // functions
+    function play() {
+      var pointDiv = document.getElementById("point");
+      sumOfDice = rollDice();
+
+      if (firstTurn) {
+        switch (sumOfDice) {
+          case 7:
+          case 11:
+            gameStatus = WON;
+            point.innerHTML = '';
+            break;
+          case 2:
+          case 3:
+          case 12:
+            gameStatus = LOST;
+            point.innerHTML = '';
+            break;
+          default:
+            gameStatus = CONTINUE_ROLLING;
+            pointToWin = sumOfDice;
+        }
+        pointDiv.innerHTML = pointToWin;
+        firstTurn = false;
+      } else {
+        if (sumOfDice == pointToWin)
+          gameStatus = WON;
+        else if (sumOfDice == 7)
+          gameStatus = LOST;
+      }
+      setNextGameStatus(gameStatus);
+    }
+
+    function rollDice() {
+      var dice1;
+      var dice2;
+      var result;
+      dice1 = Math.floor(1 + Math.random() * 6);
+      dice2 = Math.floor(1 + Math.random() * 6);
+      result = dice1 + dice2;
+      document.getElementById("dice1").innerHTML = dice1;
+      document.getElementById("dice2").innerHTML = dice2;
+      document.getElementById("result").innerHTML = result;
+      return result;
+    }
+
+    function setNextGameStatus(gameStatus) {
+      var statusDiv = document.getElementById("status");
+      var winDiv = document.getElementById("win");
+      var lostDiv = document.getElementById("lost");
+      var pointDiv = document.getElementById("point");
+
+      if (gameStatus == CONTINUE_ROLLING) {
+        statusDiv.innerHTML = "Roll Again";
+      } else {
+        firstTurn = true;
+        pointToWin = 0;
+        pointDiv.innerHTML = '';
+        if (gameStatus == WON) {
+          winCount += 1;
+          winDiv.innerHTML = 'Wins: ' + winCount;
+          statusDiv.innerHTML = 'You Win';
+        } else {
+          lostCount += 1;
+          lostDiv.innerHTML = 'Lost: ' + lostCount;
+          statusDiv.innerHTML = 'You Lost';
+        }
+      }
+    }
+
+    function clearStats() {
+      firstTurn = true;
+      sumOfDice = 0;
+      pointToWin = 0;
+      gameStatus = CONTINUE_ROLLING;
+      winCount = 0;
+      lostCount = 0;
+
+      document.getElementById("dice1").innerHTML = '';
+      document.getElementById("dice2").innerHTML = '';
+      document.getElementById("result").innerHTML = '';
+      document.getElementById("status").innerHTML = 'Roll Again';
+      document.getElementById("point").innerHTML = '';
+      document.getElementById("win").innerHTML = 'Wins: ' + winCount;
+      document.getElementById("lost").innerHTML = 'Lost: ' + lostCount;
+    }
+  </script>
+</body>
+
+</html>

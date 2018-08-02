@@ -1,0 +1,219 @@
+<!DOCTYPE>
+
+<html>
+
+<head>
+  <title> Concentration Game </title>
+  <header>
+    <h1> Concentration Game </h1>
+  </header>
+
+  <meta charset="UTF-8" />
+  <style>
+    #result {
+      align-content: center;
+    }
+
+    body {
+      background: #e0e0e0;
+      font-family: Helvetica, Arial, "Lucida Grande", sans-serif;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    main,
+    section {
+      width: 100%;
+      margin: auto;
+      padding-top: 10px;
+      background-color: white;
+    }
+
+    header h1 {
+      color: #6f6f6f;
+      font-family: Lato, sans-serif;
+      font-size: 40px;
+      font-weight: 400;
+      margin: 20px 0 0;
+      text-align: center;
+      text-shadow: 0 0 0 rgba(0, 0, 0, .4);
+    }
+
+    div#game_board {
+      border: #999 1px solid;
+      width: 614px;
+      height: 614px;
+      padding: 0px;
+      margin: 0px auto;
+    }
+
+    div#game_board>div {
+      border: #000 1px solid;
+      width: 100px;
+      height: 100px;
+      float: left;
+      font-size: 64px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    nav {
+      margin: 20px auto;
+      width: 450px;
+      text-align: center;
+    }
+
+    nav a {
+      background-color: #a4a4a4;
+      color: #fff;
+      display: inline-block;
+      font-family: Lato, sans-serif;
+      font-size: 15px;
+      padding: 7px;
+      text-decoration: none;
+    }
+
+    nav a.active,
+    nav a:hover {
+      background: #c2c2c2;
+      color: #818181;
+    }
+
+    footer {
+      margin: auto;
+      padding-top: 10px;
+      margin-top: 10px;
+      text-align: center;
+      color: gray;
+      clear: both;
+    }
+  </style>
+  <script>
+    var card_number_array = ['1', '1', '2', '2', '3', '3', '4', '4', '5', '5', '6', '6', '7', '7', '8', '8', '9', '9', '10', '10', '11', '11', '12', '12', '13', '13', '14', '14', '15', '15', '16', '16', '17', '17', '18', '18'];
+    var selected_values = [];
+    var selected_card_ids = [];
+    var matched_card_count = 0;
+    var flip_card_count = 0;
+    var time_lapsed = 0;
+    var timerStartsAlready = false;
+    var gameTimer;
+
+    function shuffle(number_array) {
+      var i = number_array.length - 1;
+      var j;
+      var temp;
+      while (i > 0) {
+        j = Math.floor(Math.random() * (i + 1));
+        temp = number_array[j];
+        number_array[j] = number_array[i];
+        number_array[i] = temp;
+        --i;
+      }
+    }
+
+    function makeNewGameBoard() {
+      resetTimer();
+      time_lapsed = 0;
+      matched_card_count = 0;
+      flip_card_count = 0;
+      var output = '';
+      shuffle(card_number_array);
+
+      for (var i = 0; i < card_number_array.length; i++) {
+        output += '<div id=' + i + ' onclick="flipCard(this, \'' + card_number_array[i] + '\')"></div>';
+      }
+      document.getElementById('game_board').innerHTML = output;
+      document.getElementById('result').innerHTML = 'you clicked ' + flip_card_count + ' times';
+    }
+
+    function flipCard(cardDiv, cardNumber) {
+      ++flip_card_count;
+
+      document.getElementById('result').innerHTML = 'you clicked ' + flip_card_count + ' times';
+      if (cardDiv.innerHTML == "" && selected_values.length < 2) {
+        cardDiv.style.background = '#DDD';
+        cardDiv.innerHTML = cardNumber;
+        if (selected_values.length == 0) {
+          selected_values.push(cardNumber);
+          selected_card_ids.push(cardDiv.id);
+        } else if (selected_values.length == 1) {
+          selected_values.push(cardNumber);
+          selected_card_ids.push(cardDiv.id);
+          if (selected_values[0] == selected_values[1]) { //when flipped cards are same
+            matched_card_count += 2;
+            selected_values = [];
+            selected_card_ids = [];
+            checkGameIsClear();
+          } else {
+            setTimeout(flipUnmatchedCard, 500);
+          }
+        }
+      }
+    }
+
+    function checkGameIsClear() {
+      if (matched_card_count == card_number_array.length) {
+        alert("You cleared the game! generating new game board.");
+        document.getElementById('game_board').innerHTML = "";
+        makeNewGameBoard();
+      }
+    }
+
+    function flipUnmatchedCard() {
+      var firstCard = document.getElementById(selected_card_ids[0]);
+      var secondCard = document.getElementById(selected_card_ids[1]);
+      firstCard.style.background = '#FFF';
+      firstCard.innerHTML = "";
+      secondCard.style.background = '#FFF';
+      secondCard.innerHTML = "";
+      selected_values = []; //make array empty when the number of filpped cards is two
+      selected_card_ids = [];
+    }
+
+    function startTimer() {
+      if (!timerStartsAlready) {
+        timerStartsAlready = true;
+        gameTimer = setInterval(function () {
+          time_lapsed += 1;
+          document.getElementById("time").innerHTML = time_lapsed;
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      time_lapsed = 0;
+      timerStartsAlready = false;
+      clearInterval(gameTimer);
+      document.getElementById("time").innerHTML = '';
+    }
+  </script>
+</head>
+
+<body>
+  <nav>
+    <a href="./finalCasinoCraps.html">Casino Craps</a>
+    <a href="./finalTicTacToe.html">Tic Tac Toe</a>
+    <a href="./finalBingo.html">Bingo</a>
+    <a class="active" href="./finalConcentrationGame.html">Concentration</a>
+  </nav>
+  <button id="timer">Timer</button>
+  <button id="reset">Reset Game</button>
+  <div id="time"></div>
+
+  <main>
+    <div id="game_board"></div>
+    <div id="result"></div>
+  </main>
+
+  <footer>Yena Park @ Sheridan SYST10199 Web Programming
+  </footer>
+
+  <script>
+    document.getElementById("reset").addEventListener("click", makeNewGameBoard);
+    document.getElementById("timer").addEventListener("click", startTimer);
+    makeNewGameBoard();
+  </script>
+
+</body>
+
+</html>
